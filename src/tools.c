@@ -37,10 +37,17 @@ typedef enum {
   XFT_SPEC
 } FontType;
 
+typedef enum {
+  RGB_SPEC,
+  HEX_SPEC
+} ColorType;
+
 static gboolean set_font_type (const gchar *name, const gchar *val, gpointer d, GError **err);
+static gboolean set_color_type (const gchar *name, const gchar *val, gpointer d, GError **err);
 static gboolean set_size_type (const gchar *name, const gchar *val, gpointer d, GError **err);
 
 static FontType font_type = XFT_SPEC;
+static ColorType color_type = HEX_SPEC;
 
 static gboolean pfd_mode = FALSE;
 static gboolean icon_mode = FALSE;
@@ -53,7 +60,7 @@ static gboolean langs_mode = FALSE;
 #ifdef HAVE_SOURCEVIEW
 static gboolean themes_mode = FALSE;
 #endif
-gboolean pick_color = FALSE;
+static gboolean pick_color = FALSE;
 
 static guint icon_size = 24;
 static gchar *icon_theme_name = NULL;
@@ -91,6 +98,8 @@ static GOptionEntry icon_ents[] = {
 static GOptionEntry color_ents[] = {
   { "color", 'c', G_OPTION_FLAG_IN_MAIN, G_OPTION_ARG_NONE, &color_mode, N_("Color manipulation tools"), NULL },
   { "pick", 0, 0, G_OPTION_ARG_NONE, &pick_color, N_("Pick up screen color"), NULL },
+  { "rgb", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, set_color_type, N_("Print color in RGBA format"), NULL },
+  { "hex", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, set_color_type, N_("Print color in HEX format"), NULL },
   { NULL }
 };
 
@@ -106,6 +115,19 @@ set_font_type (const gchar *name, const gchar *val, gpointer d, GError **err)
     font_type = PANGO_SPEC;
   else if (name[i] == 'x')
     font_type = XFT_SPEC;
+  else
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+set_color_type (const gchar *name, const gchar *val, gpointer d, GError **err)
+{
+  if (name[2] == 'r')
+    color_type = RGB_SPEC;
+  else if (name[2] == 'h')
+    color_type = HEX_SPEC;
   else
     return FALSE;
 
@@ -322,6 +344,23 @@ run_color_mode ()
       gtk_init (NULL, NULL);
       yad_get_screen_color (NULL);
       gtk_main ();
+    }
+  else if (args && args[0])
+    {
+       GdkRGBA clr;
+
+       if (gdk_rgba_parse (&clr, args[0]))
+         {
+           switch (color_type)
+             {
+             case RGB_SPEC:
+               g_print ("%s\n", gdk_rgba_to_string (&clr));
+               break;
+             case HEX_SPEC:
+               g_print ("#%02X%02X%02X\n", (gint) (clr.red * 255), (gint) (clr.green * 255), (gint) (clr.blue * 255));
+               break;
+             }
+         }
     }
 
   return 0;
