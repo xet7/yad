@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with YAD. If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2008-2025, Victor Ananjevsky <victor@sanana.kiev.ua>
+ * Copyright (C) 2008-2026, Victor Ananjevsky <victor@sanana.kiev.ua>
  */
 
 #include <errno.h>
@@ -126,7 +126,13 @@ calendar_create_widget (GtkWidget * dlg)
   if (options.calendar_data.weeks)
     cal_opts |= GTK_CALENDAR_SHOW_WEEK_NUMBERS;
   if (options.calendar_data.details)
-    cal_opts |= GTK_CALENDAR_SHOW_DETAILS;
+    {
+      if (options.calendar_data.detail_width != -1)
+        {
+          cal_opts |= GTK_CALENDAR_SHOW_DETAILS;
+          gtk_calendar_set_detail_width_chars (GTK_CALENDAR (w), options.calendar_data.detail_width);
+        }
+    }
   gtk_calendar_set_display_options (GTK_CALENDAR (w), cal_opts);
 
   g_signal_connect (w, "day-selected-double-click", G_CALLBACK (double_click_cb), dlg);

@@ -302,6 +302,7 @@ typedef struct {
   gint month;
   gint year;
   gchar *details;
+  gint detail_width;
   gboolean weeks;
 } YadCalendarData;
 
